@@ -1,0 +1,47 @@
+{
+  "states": {
+    "1": {
+      "startsub": "11"
+    },
+    "11": {
+      "parent": "1",
+      "transitions": {
+        "11-12": {
+          "to": "12",
+          "guard": {
+            "type": "always"
+          },
+          "action": "setnext"
+        }
+      }
+    },
+    "12": {
+      "parent": "1",
+      "transitions": {
+        "12-13": {
+          "to": "13",
+          "guard": {
+            "type": "context",
+            "key": "next",
+            "value": "13"
+          }
+        },
+        "12-14": {
+          "to": "14",
+          "guard": {
+            "type": "context",
+            "key": "next",
+            "value": "14"
+          },
+          "action": "setresult"
+        }
+      }
+    },
+    "13": {
+      "parent": "1"
+    },
+    "14": {
+      "parent": "1"
+    }
+  }
+}
