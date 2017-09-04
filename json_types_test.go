@@ -108,7 +108,7 @@ func TestJsonTransitionFn(t *testing.T) {
 		t.FailNow()
 	}
 	act["hello"] = func(ctx ContextOperator) error { return nil }
-	tr, err := jt.Transition("1-2", act)
+	_, err := jt.Transition("1-2", act)
 	if err != nil {
 		t.Logf("Expected to pass, error: %s", err.Error())
 		t.FailNow()
