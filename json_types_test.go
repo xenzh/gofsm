@@ -114,3 +114,46 @@ func TestJsonTransitionFn(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestJsonStateUnmarshalValid1(t *testing.T) {
+	raw_json := `
+	{
+		"startsub": "11"
+	}`
+
+	var js jsonState
+	if err := json.Unmarshal([]byte(raw_json), &js); err != nil {
+		t.Logf("Unmarshalling failed: %s", err.Error())
+		t.FailNow()
+	}
+	if js.StartSubState != "11" {
+		t.Logf("Unmarshalled different from expected:\nexpected: %s\nactual:%v", raw_json, js)
+		t.FailNow()
+	}
+}
+
+func TestJsonStateUnmarshalValid2(t *testing.T) {
+	raw_json := `
+	{
+		"parent": "1",
+		"transitions": {
+			"11-12": {
+				"to": "12",
+				"guard": {
+					"type": "always"
+				},
+				"action": "setnext"
+			}
+		}
+	}`
+
+	var js jsonState
+	if err := json.Unmarshal([]byte(raw_json), &js); err != nil {
+		t.Logf("Unmarshalling failed: %s", err.Error())
+		t.FailNow()
+	}
+	if js.Parent != "1" {
+		t.Logf("Unmarshalled different from expected:\nexpected: %s\nactual:%v", raw_json, js)
+		t.FailNow()
+	}
+}
