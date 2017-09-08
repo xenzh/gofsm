@@ -16,20 +16,20 @@ type actionMap map[string]ActionFn
 // * Allows to manually construct FSM (much like )
 type Builder struct {
 	actions *actionMap
-	fsm     *Fsm
+	fstr    *FsmStructure
 	err     *FsmError
 }
 
 // NewBuilder
 // Constructs new builder
 func NewBuilder(actions *actionMap) *Builder {
-	return &Builder{actions, NewFsm(), nil}
+	return &Builder{actions, NewFsmStructure(), nil}
 }
 
 // Fsm
 // Returns constructed state machine or an error, if it's invalid
-func (bld *Builder) Fsm() (fsm *Fsm, err *FsmError) {
-	if bld.fsm == nil {
+func (bld *Builder) FsmStructure() (fstr *FsmStructure, err *FsmError) {
+	if bld.fstr == nil {
 		err = newFsmErrorInvalid("FSM not created")
 		return
 	}
@@ -37,8 +37,8 @@ func (bld *Builder) Fsm() (fsm *Fsm, err *FsmError) {
 		err = bld.err
 		return
 	}
-	if err = bld.fsm.Validate(); err == nil {
-		fsm = bld.fsm
+	if err = bld.fstr.Validate(); err == nil {
+		fstr = bld.fstr
 	}
 	return
 }

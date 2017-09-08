@@ -16,13 +16,13 @@ type History []HistoryItem
 // Print out an object in a user-friendly way
 func (h *History) Dump() string {
 	buf := bytes.NewBufferString("")
-	h.dumpImpl(buf, 0)
+	h.dump(buf, 0)
 	return buf.String()
 }
 
 // dumpImpl
 // Print out an object in a user-friendly way, composable
-func (h *History) dumpImpl(buf *bytes.Buffer, indent int) {
+func (h *History) dump(buf *bytes.Buffer, indent int) {
 	indentStr := strings.Repeat("\t", indent)
 	items := *h
 
