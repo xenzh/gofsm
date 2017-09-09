@@ -38,7 +38,7 @@ type jsonTransition struct {
 	Action  string    `json:"action"`
 }
 
-func (jt *jsonTransition) Transition(name string, actions actionMap) (tr Transition, err *FsmError) {
+func (jt *jsonTransition) Transition(name string, actions ActionMap) (tr Transition, err *FsmError) {
 	if _, present := actions[jt.Action]; !present {
 		cause := fmt.Sprintf("action \"%s\" was not found in the map: %v", jt.Action, actions)
 		err = newFsmErrorInvalid(cause)
@@ -58,7 +58,7 @@ type jsonState struct {
 	Transitions   map[string]jsonTransition `json:"transitions"`
 }
 
-func (js *jsonState) StateInfo(name string, parent *StateInfo, actions actionMap) (si *StateInfo, err *FsmError) {
+func (js *jsonState) StateInfo(name string, parent *StateInfo, actions ActionMap) (si *StateInfo, err *FsmError) {
 	var start bool
 	if len(js.StartSubState) > 0 {
 		if len(js.Transitions) > 0 {
@@ -79,9 +79,20 @@ func (js *jsonState) StateInfo(name string, parent *StateInfo, actions actionMap
 		si = NewState(name, trs)
 	}
 
-	if parent != nil {
+	if len(js.Parent) > 0 {
+		if parent == nil {
+			err = newFsmErrorInvalid("Json defined a parent, but parent object is empty")
+			return
+		}
+		if parent.Name != js.Parent {
+			cause := fmt.Sprintf("Parent (%s) is different from expected (%s)", parent.Name, js.Parent)
+			err = newFsmErrorInvalid(cause)
+			return
+		}
+
 		parent.addSubState(si, start)
 	}
+
 	return
 }
 

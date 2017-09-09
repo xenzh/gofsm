@@ -2,6 +2,7 @@ package simple_fsm
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 )
 
@@ -36,6 +37,16 @@ func (si *StateInfo) addSubState(sub *StateInfo, start bool) (err *FsmError) {
 	sub.Parent = si
 	if start {
 		si.StartSubState = sub
+
+		if len(si.Transitions) > 0 {
+			err = newFsmErrorStateIsInvalid(si, `Start transition can't be used on
+				parent with transitions defined, it'll lead to discarding original
+				transitions`,
+			)
+			return
+		}
+		trName := fmt.Sprintf("Always %s->%s", si.Name, sub.Name)
+		si.Transitions = NewTransitionAlways(trName, sub.Name, nil)
 	}
 	return
 }
@@ -85,18 +96,21 @@ func (si *StateInfo) Validate() (err *FsmError) {
 	switch {
 	case si.Name == "":
 		err = newFsmErrorStateIsInvalid(si, "state should be named")
+	case si.checkHierarchyCycled():
+		err = newFsmErrorStateIsInvalid(si, "state hierarchy is cycled")
 	case !si.Final():
 		for idx := range si.Transitions {
 			if err = si.Transitions[idx].Validate(); err != nil {
 				break
 			}
 		}
-	case si.checkHierarchyCycled():
-		err = newFsmErrorStateIsInvalid(si, "state hierarchy is cycled")
 	}
 	return
 }
 
+// checkHierarchyCycled
+// Check if there's a cycle in parent-child relations
+// from botton to the top
 func (si *StateInfo) checkHierarchyCycled() bool {
 	visited := make(map[string]bool)
 

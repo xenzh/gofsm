@@ -14,6 +14,7 @@ const (
 	ErrCtxInvalidType
 	ErrStateAlreadyExists
 	ErrStateIsInvalid
+	ErrFsmLoading
 	ErrFsmWrongFlow
 	ErrFsmIsInvalid
 	ErrFsmRuntime
@@ -47,6 +48,8 @@ func (e *FsmError) Error() string {
 		return fmt.Sprintf("State with the name \"%s\" is already added", e.description)
 	case ErrStateIsInvalid:
 		return fmt.Sprintf("This state is not valid: %s", e.description)
+	case ErrFsmLoading:
+		return fmt.Sprintf("Structure loading error: %s", e.description)
 	case ErrFsmWrongFlow:
 		return fmt.Sprintf("You're using it wrong: %s", e.description)
 	case ErrFsmIsInvalid:
@@ -90,6 +93,13 @@ func newFsmErrorStateIsInvalid(state *StateInfo, cause string) *FsmError {
 	return &FsmError{
 		kind:        ErrStateIsInvalid,
 		description: fmt.Sprintf("cause: \"%s\"; object dump: %#v", cause, state),
+	}
+}
+
+func newFsmErrorLoading(cause string) *FsmError {
+	return &FsmError{
+		kind:        ErrFsmLoading,
+		description: cause,
 	}
 }
 

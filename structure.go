@@ -32,6 +32,10 @@ func MakeStructure(parent *StateInfo, start *StateInfo, states ...*StateInfo) *S
 	return fstr
 }
 
+func (fstr *Structure) Empty() bool {
+	return len(fstr.states) <= FsmAutoStatesCount
+}
+
 // AddStartState
 // Validates and adds a start (sub)state to the state machine
 func (fstr *Structure) AddStartState(state *StateInfo, parent *StateInfo) (err *FsmError) {
@@ -71,7 +75,7 @@ func (fstr *Structure) addStateImpl(state *StateInfo, parent *StateInfo, start b
 	case start && parent == nil && !fstr.start.Final():
 		cause := fmt.Sprintf("start state is already set to \"%s\"", fstr.start.Transitions[0].Name)
 		return newFsmErrorInvalid(cause)
-	case start && parent != nil && len(parent.Transitions) > 0:
+	case start && autoAdopt && parent != nil && len(parent.Transitions) > 0:
 		cause := "parent should not have transitions (transition to start sub state is added automatically)"
 		return newFsmErrorInvalid(cause)
 	}
@@ -84,10 +88,13 @@ func (fstr *Structure) addStateImpl(state *StateInfo, parent *StateInfo, start b
 	}
 
 	fstr.states[state.Name] = state
+
+	if !autoAdopt {
+		return
+	}
+
 	if parent == nil {
-		if autoAdopt {
-			err = fstr.start.addSubState(state, start)
-		}
+		err = fstr.start.addSubState(state, start)
 	} else {
 		if _, present := fstr.states[parent.Name]; !present {
 			err = newFsmErrorInvalid("Parent state was not found (forgot to add?)")
@@ -95,13 +102,7 @@ func (fstr *Structure) addStateImpl(state *StateInfo, parent *StateInfo, start b
 			err = parent.addSubState(state, start)
 		}
 	}
-	if err != nil {
-		return
-	}
 
-	if start && autoAdopt {
-		state.Parent.Transitions = NewTransitionAlways("start", state.Name, nil)
-	}
 	return
 }
 
@@ -110,11 +111,11 @@ func (fstr *Structure) addStateImpl(state *StateInfo, parent *StateInfo, start b
 // * no transitions to unknown
 // * no dead states
 func (fstr *Structure) Validate() (err *FsmError) {
-	state_refs := make(map[string]bool)
+	stateRefs := make(map[string]bool)
 	for k, _ := range fstr.states {
-		state_refs[k] = false
+		stateRefs[k] = false
 	}
-	state_refs[fstr.start.Name] = true
+	stateRefs[fstr.start.Name] = true
 
 	// TODO: 1 start substate can't belong to many parents
 
@@ -136,22 +137,22 @@ func (fstr *Structure) Validate() (err *FsmError) {
 				cause := fmt.Sprintf("\"%s\" and \"%s\" don't have a common parent", s.Name, tr.ToState)
 				return newFsmErrorInvalid(cause)
 			}
-			state_refs[tr.ToState] = true
+			stateRefs[tr.ToState] = true
 		}
 	}
 
-	var dead_states []string
-	for name, referenced := range state_refs {
+	var deadStates []string
+	for name, referenced := range stateRefs {
 		if !referenced {
-			dead_states = append(dead_states, name)
+			deadStates = append(deadStates, name)
 		}
 	}
 
-	if len(dead_states) > 0 {
+	if len(deadStates) > 0 {
 		buf := bytes.NewBufferString("there are isolated states: ")
-		for idx := range dead_states {
+		for idx := range deadStates {
 			buf.WriteString("\"")
-			buf.WriteString(dead_states[idx])
+			buf.WriteString(deadStates[idx])
 			buf.WriteString("\", ")
 		}
 		return newFsmErrorInvalid(buf.String())

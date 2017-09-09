@@ -143,7 +143,7 @@ func (fsm *Fsm) Advance() (step HistoryItem, err *FsmError) {
 
 	// find target state by checking opened transitions
 	var transition *Transition
-	var opened_transitions int
+	var openedTransitionCount int
 	for idx := range current.state.Transitions {
 		currTransition := &current.state.Transitions[idx]
 		open, e := currTransition.Guard(&fsm.stack)
@@ -154,14 +154,14 @@ func (fsm *Fsm) Advance() (step HistoryItem, err *FsmError) {
 		}
 		if open {
 			transition = currTransition
-			opened_transitions++
+			openedTransitionCount++
 		}
 	}
 
 	// * if there are some but no one fits, error
 	// * if there are some and several fits, error
 	var next *StateInfo
-	switch opened_transitions {
+	switch openedTransitionCount {
 	case 0:
 		err = newFsmErrorRuntime("all transitions are closed", current)
 	case 1:
@@ -175,8 +175,8 @@ func (fsm *Fsm) Advance() (step HistoryItem, err *FsmError) {
 	}
 
 	// pop the stack until common parent is found for current and next states
-	var depth_diff int
-	ancestor, depth_diff := findCommonAncestor(current.state, next)
+	var depthDiff int
+	ancestor, depthDiff := findCommonAncestor(current.state, next)
 	if ancestor == nil {
 		cause := fmt.Sprintf("\"%s\" and \"%s\" don't have a common parent", currentName, next.Name)
 		err = newFsmErrorRuntime(cause, fsm.structure.states)
@@ -184,15 +184,15 @@ func (fsm *Fsm) Advance() (step HistoryItem, err *FsmError) {
 		return
 	}
 	switch {
-	case depth_diff == -1:
+	case depthDiff == -1:
 		// meaning we go from parent state to substate,
 		// no need to pop anything from the stack
-	case depth_diff < -1:
+	case depthDiff < -1:
 		err = newFsmErrorRuntime("Trying to go deeper than 1 state at a time", current.state)
 		fsm.goFatal(err)
 		return
-	case depth_diff >= 0:
-		for idx := 0; idx < depth_diff+1; idx++ {
+	case depthDiff >= 0:
+		for idx := 0; idx < depthDiff+1; idx++ {
 			if fsm.stack.Depth() <= FsmAutoStatesCount {
 				break
 			}

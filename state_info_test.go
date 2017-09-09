@@ -5,30 +5,41 @@ import (
 )
 
 func TestAddSubState(t *testing.T) {
-	ok_parent := NewState("name", nil)
-	ok_child := NewState("sub", nil)
-	if err := ok_parent.addSubState(ok_child, true); err != nil {
+	okParent := NewState("name", nil)
+	okChild := NewState("sub", nil)
+	if err := okParent.addSubState(okChild, true); err != nil {
 		t.Log("Adopting should succeed")
 		t.FailNow()
 	}
-	if ok_parent.StartSubState != ok_child || ok_child.Parent != ok_parent {
-		t.Log("Parent-child links should be properly set up")
+	if okParent.StartSubState != okChild || okChild.Parent != okParent {
+		t.Log("Parent-child links should be set up properly")
+		t.FailNow()
+	}
+	if len(okParent.Transitions) != 1 || okParent.Transitions[0].Guard == nil {
+		t.Log("Adoption should create an unconditional parent->child transition")
 		t.FailNow()
 	}
 
-	bad_parent := NewState("name", nil)
-	bad_child := NewState("sub", nil)
-	bad_child.Parent = ok_parent
-	if err := bad_parent.addSubState(bad_child, true); err == nil || err.Kind() != ErrStateIsInvalid {
-		t.Log("Adoption should fail with state invalid error")
+	badParent := NewState("name", nil)
+	badChild := NewState("sub", nil)
+	badChild.Parent = okParent
+	if err := badParent.addSubState(badChild, true); err == nil || err.Kind() != ErrStateIsInvalid {
+		t.Log("Adoption should fail (substate already has a parent)")
 		t.FailNow()
 	}
 
-	bad_parent = NewState("name", nil)
-	bad_child = NewState("sub", nil)
-	bad_parent.StartSubState = ok_child
-	if err := bad_parent.addSubState(bad_child, true); err == nil || err.Kind() != ErrStateIsInvalid {
-		t.Log("Adoption should fail with state invalid error")
+	badParent = NewState("name", nil)
+	badChild = NewState("sub", nil)
+	badParent.StartSubState = okChild
+	if err := badParent.addSubState(badChild, true); err == nil || err.Kind() != ErrStateIsInvalid {
+		t.Log("Adoption should fail (parent already has start substate)")
+		t.FailNow()
+	}
+
+	badParent = NewState("name", NewTransitionAlways("name->sub", "sub", nil))
+	badChild = NewState("sub", nil)
+	if err := badParent.addSubState(badChild, true); err == nil || err.Kind() != ErrStateIsInvalid {
+		t.Log("Adoption should fail (parent already has transitions defined)")
 		t.FailNow()
 	}
 }
@@ -79,36 +90,36 @@ func TestFindCommonAncestorPositive(t *testing.T) {
 	g := NewState("root", nil)
 	c1, _ := g.newSubState("c1", nil, false)
 
-	fwd, fwd_d := findCommonAncestor(c1, c1)
+	fwd, fwdD := findCommonAncestor(c1, c1)
 	if fwd != c1 {
 		t.Log("The same state is it's own common ancestor")
 		t.FailNow()
 	}
-	if fwd_d != 0 {
+	if fwdD != 0 {
 		t.Log("State can't have a depth difference with itself")
 		t.FailNow()
 	}
 
-	fwd, fwd_d = findCommonAncestor(g, c1)
-	bwd, bwd_d := findCommonAncestor(c1, g)
+	fwd, fwdD = findCommonAncestor(g, c1)
+	bwd, bwdD := findCommonAncestor(c1, g)
 	if fwd != g || bwd != g {
 		t.Log("Ancestor may be one of the input states")
 		t.FailNow()
 	}
-	if fwd_d != -1 || bwd_d != 1 {
+	if fwdD != -1 || bwdD != 1 {
 		t.Log("First state should be deeper than second by 1")
 		t.FailNow()
 	}
 
 	c2, _ := g.newSubState("c2", nil, false)
 
-	fwd, fwd_d = findCommonAncestor(c1, c2)
-	bwd, bwd_d = findCommonAncestor(c2, c1)
+	fwd, fwdD = findCommonAncestor(c1, c2)
+	bwd, bwdD = findCommonAncestor(c2, c1)
 	if fwd != g || bwd != g {
 		t.Log("Brother children should have a common ancestor")
 		t.FailNow()
 	}
-	if fwd_d != 0 || bwd_d != 0 {
+	if fwdD != 0 || bwdD != 0 {
 		t.Log("Brother children should have the same depth")
 		t.FailNow()
 	}
@@ -116,26 +127,26 @@ func TestFindCommonAncestorPositive(t *testing.T) {
 	c11, _ := c1.newSubState("c11", nil, false)
 	c111, _ := c11.newSubState("c111", nil, false)
 
-	fwd, fwd_d = findCommonAncestor(c2, c111)
-	bwd, bwd_d = findCommonAncestor(c111, c2)
+	fwd, fwdD = findCommonAncestor(c2, c111)
+	bwd, bwdD = findCommonAncestor(c111, c2)
 	if fwd != g || bwd != g {
 		t.Log("Children should have a common ancestor")
 		t.FailNow()
 	}
-	if fwd_d != -2 || bwd_d != 2 {
+	if fwdD != -2 || bwdD != 2 {
 		t.Log("Second state should be deeper than first by 2")
 		t.FailNow()
 	}
 
 	c21, _ := c2.newSubState("c21", nil, false)
 
-	fwd, fwd_d = findCommonAncestor(c21, c111)
-	bwd, bwd_d = findCommonAncestor(c111, c21)
+	fwd, fwdD = findCommonAncestor(c21, c111)
+	bwd, bwdD = findCommonAncestor(c111, c21)
 	if fwd != g || bwd != g {
 		t.Log("Children should have a common ancestor")
 		t.FailNow()
 	}
-	if fwd_d != -1 || bwd_d != 1 {
+	if fwdD != -1 || bwdD != 1 {
 		t.Log("Second state should be deeper than first by 1")
 		t.FailNow()
 	}
@@ -168,12 +179,25 @@ func TestStateValidate(t *testing.T) {
 	interm := NewState("interm", nil)
 	inner := NewState("inner", nil)
 
-	outer.addSubState(interm, true)
-	interm.addSubState(inner, true)
-	inner.addSubState(outer, true)
+	if e := outer.addSubState(interm, true); e != nil {
+		t.Logf("Failed adding a substate, error: %s", e)
+		t.FailNow()
+	}
+	if e := interm.addSubState(inner, true); e != nil {
+		t.Logf("Failed adding a substate, error: %s", e)
+		t.FailNow()
+	}
+	if e := inner.addSubState(outer, true); e != nil {
+		t.Logf("Failed adding a substate, error: %s", e)
+		t.FailNow()
+	}
 
 	if err := interm.Validate(); err == nil || err.Kind() != ErrStateIsInvalid {
-		t.Logf("State should be invalid (cyclic), %s", Dump(interm))
+		t.Logf("States should be invalid (cyclic)\n%s\n%s\n%s",
+			Dump(outer),
+			Dump(interm),
+			Dump(inner),
+		)
 		t.FailNow()
 	}
 }
