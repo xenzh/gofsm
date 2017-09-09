@@ -1,5 +1,8 @@
 {
   "states": {
+    "global": {
+      "startsub": "1"
+    },
     "1": {
       "startsub": "11"
     },
@@ -24,7 +27,8 @@
             "type": "context",
             "key": "next",
             "value": "13"
-          }
+          },
+          "action": "setresult"
         },
         "12-14": {
           "to": "14",
@@ -32,8 +36,7 @@
             "type": "context",
             "key": "next",
             "value": "14"
-          },
-          "action": "setresult"
+          }
         }
       }
     },
@@ -41,6 +44,15 @@
       "parent": "1"
     },
     "14": {
+      "parent": "1",
+      "transitions": {
+        "14-15": {
+          "to": "15",
+          "action": "setresult"
+        }
+      }
+    },
+    "15": {
       "parent": "1"
     }
   }

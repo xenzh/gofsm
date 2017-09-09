@@ -23,8 +23,22 @@ func TestJsonGuardUnmarshal(t *testing.T) {
 	}
 }
 
-func TestJsonGuardFnAlways(t *testing.T) {
+func TestJsonGuardFnAlwaysExplicit(t *testing.T) {
 	jg := jsonGuard{"always", "", ""}
+	guard, err := jg.GuardFn()
+	if err != nil {
+		t.Logf("Expected to succeed, error: %v", err)
+		t.FailNow()
+	}
+	ctx := newContext()
+	if ok, e := guard(&ctx); !ok || e != nil {
+		t.Log("\"always\" transitions are expected to always succeed")
+		t.FailNow()
+	}
+}
+
+func TestJsonGuardFnAlwaysImplicit(t *testing.T) {
+	jg := jsonGuard{"", "", ""}
 	guard, err := jg.GuardFn()
 	if err != nil {
 		t.Logf("Expected to succeed, error: %v", err)

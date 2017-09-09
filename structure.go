@@ -106,6 +106,27 @@ func (fstr *Structure) addStateImpl(state *StateInfo, parent *StateInfo, start b
 	return
 }
 
+// appendStates
+// Appends an external state map to the structure.
+// start is expected to defined FSM's main entry point.
+// External states are assumed to have a consistent hierarchy.
+// Duplicate state names are treated as an error.
+func (fstr *Structure) appendStates(start *StateInfo, additional map[string]*StateInfo) *FsmError {
+	if start != nil {
+		if err := fstr.AddStartState(start, nil); err != nil {
+			return err
+		}
+	}
+
+	for k, v := range additional {
+		if _, found := fstr.states[k]; found {
+			return newFsmErrorStateIsInvalid(v, "Can't add a duplicate state")
+		}
+		fstr.states[k] = v
+	}
+	return nil
+}
+
 // Validate
 // Checks if FSM structure is consistent:
 // * no transitions to unknown

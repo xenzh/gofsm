@@ -12,7 +12,8 @@ type jsonGuard struct {
 
 func (jg *jsonGuard) GuardFn() (guard GuardFn, err *FsmError) {
 	switch jg.Type {
-	case "always":
+	case "always", "":
+		// empty value means no guard specified => unconditional transition implication
 		guard = func(ctx ContextAccessor) (bool, error) { return true, nil }
 	case "context":
 		if len(jg.Key) == 0 || jg.Value == nil {
@@ -39,16 +40,23 @@ type jsonTransition struct {
 }
 
 func (jt *jsonTransition) Transition(name string, actions ActionMap) (tr Transition, err *FsmError) {
-	if _, present := actions[jt.Action]; !present {
-		cause := fmt.Sprintf("action \"%s\" was not found in the map: %v", jt.Action, actions)
-		err = newFsmErrorInvalid(cause)
-		return
+	var action ActionFn
+	if len(jt.Action) > 0 {
+		if act, present := actions[jt.Action]; !present {
+			cause := fmt.Sprintf("action \"%s\" was not found in the map: %v", jt.Action, actions)
+			err = newFsmErrorInvalid(cause)
+			return
+		} else {
+			action = act
+		}
 	}
+
 	var guard GuardFn
 	if guard, err = jt.Guard.GuardFn(); err != nil {
 		return
 	}
-	tr = NewTransition(name, jt.ToState, guard, actions[jt.Action])
+
+	tr = NewTransition(name, jt.ToState, guard, action)
 	return
 }
 
@@ -58,7 +66,7 @@ type jsonState struct {
 	Transitions   map[string]jsonTransition `json:"transitions"`
 }
 
-func (js *jsonState) StateInfo(name string, parent *StateInfo, actions ActionMap) (si *StateInfo, err *FsmError) {
+func (js jsonState) StateInfo(name string, parent *StateInfo, actions ActionMap) (si *StateInfo, err *FsmError) {
 	var start bool
 	if len(js.StartSubState) > 0 {
 		if len(js.Transitions) > 0 {
