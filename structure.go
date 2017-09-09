@@ -5,17 +5,17 @@ import (
 	"fmt"
 )
 
-// FsmStructure
+// Structure
 // Holds static finite state machive information like states and transitions
-type FsmStructure struct {
+type Structure struct {
 	states map[string]*StateInfo
 	start  *StateInfo
 }
 
-// NewFsmStructure
+// NewStructure
 // Constructs empty Fsm structure
-func NewFsmStructure() *FsmStructure {
-	fstr := FsmStructure{
+func NewStructure() *Structure {
+	fstr := Structure{
 		states: make(map[string]*StateInfo),
 		start:  NewState(FsmGlobalStateName, nil),
 	}
@@ -24,29 +24,29 @@ func NewFsmStructure() *FsmStructure {
 	return &fstr
 }
 
-// MakeFsmStructure
+// MakeStructure
 // Constructs FSM structure and adds a number of (sub)states
-func MakeFsmStructure(parent *StateInfo, start *StateInfo, states ...*StateInfo) *FsmStructure {
-	fstr := NewFsmStructure()
+func MakeStructure(parent *StateInfo, start *StateInfo, states ...*StateInfo) *Structure {
+	fstr := NewStructure()
 	fstr.AddStates(parent, start, states...)
 	return fstr
 }
 
 // AddStartState
 // Validates and adds a start (sub)state to the state machine
-func (fstr *FsmStructure) AddStartState(state *StateInfo, parent *StateInfo) (err *FsmError) {
+func (fstr *Structure) AddStartState(state *StateInfo, parent *StateInfo) (err *FsmError) {
 	return fstr.addStateImpl(state, parent, true, true)
 }
 
 // AddStartState
 // Validates and adds an intermediate (sub)state to the state machine
-func (fstr *FsmStructure) AddState(state *StateInfo, parent *StateInfo) (err *FsmError) {
+func (fstr *Structure) AddState(state *StateInfo, parent *StateInfo) (err *FsmError) {
 	return fstr.addStateImpl(state, parent, false, true)
 }
 
 // AddStates
 // Allows to add a bunch of (sub)states (including starting one) to the state machine
-func (fstr *FsmStructure) AddStates(parent *StateInfo, start *StateInfo, states ...*StateInfo) (err *FsmError) {
+func (fstr *Structure) AddStates(parent *StateInfo, start *StateInfo, states ...*StateInfo) (err *FsmError) {
 	if start != nil {
 		if err = fstr.AddStartState(start, parent); err != nil {
 			return
@@ -62,7 +62,7 @@ func (fstr *FsmStructure) AddStates(parent *StateInfo, start *StateInfo, states 
 
 // addStateImpl
 // Adds a state to the state machine, validating it beforehand
-func (fstr *FsmStructure) addStateImpl(state *StateInfo, parent *StateInfo, start bool, autoAdopt bool) (err *FsmError) {
+func (fstr *Structure) addStateImpl(state *StateInfo, parent *StateInfo, start bool, autoAdopt bool) (err *FsmError) {
 	switch {
 	case state == nil:
 		return newFsmErrorStateIsInvalid(state, "state is nil")
@@ -109,7 +109,7 @@ func (fstr *FsmStructure) addStateImpl(state *StateInfo, parent *StateInfo, star
 // Checks if FSM structure is consistent:
 // * no transitions to unknown
 // * no dead states
-func (fstr *FsmStructure) Validate() (err *FsmError) {
+func (fstr *Structure) Validate() (err *FsmError) {
 	state_refs := make(map[string]bool)
 	for k, _ := range fstr.states {
 		state_refs[k] = false
@@ -160,7 +160,7 @@ func (fstr *FsmStructure) Validate() (err *FsmError) {
 	return nil
 }
 
-func (fstr *FsmStructure) dump(buf *bytes.Buffer, indent int) {
+func (fstr *Structure) dump(buf *bytes.Buffer, indent int) {
 	if len(fstr.states) == 0 {
 		buf.WriteString("\tno states\n")
 	} else {

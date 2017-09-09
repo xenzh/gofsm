@@ -5,7 +5,7 @@ import (
 )
 
 func TestFsmReset(t *testing.T) {
-	fsm := NewFsm(MakeFsmStructure(nil,
+	fsm := NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", nil)),
 		NewState("2", nil),
 	))
@@ -36,7 +36,7 @@ func TestFsmFlow(t *testing.T) {
 	}
 
 	succ := func(ctx ContextOperator) error { ctx.PutResult(true); return nil }
-	fsm := NewFsm(MakeFsmStructure(nil,
+	fsm := NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", succ)),
 		NewState("2", nil),
 	))
@@ -69,7 +69,7 @@ func TestFsmFlow(t *testing.T) {
 	}
 
 	fail := func(ctx ContextOperator) error { return newFsmErrorRuntime("fail", nil) }
-	fsm = NewFsm(MakeFsmStructure(nil,
+	fsm = NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", fail)),
 		NewState("2", nil),
 	))
@@ -89,7 +89,7 @@ func TestFsmFlow(t *testing.T) {
 }
 
 func TestFsmAdvanceWrongFlow(t *testing.T) {
-	fsm := NewFsm(MakeFsmStructure(nil,
+	fsm := NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "3", nil)),
 		NewState("2", nil),
 	))
@@ -99,7 +99,7 @@ func TestFsmAdvanceWrongFlow(t *testing.T) {
 		t.FailNow()
 	}
 
-	fsm = NewFsm(MakeFsmStructure(nil,
+	fsm = NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", nil)),
 		NewState("2", nil),
 	))
@@ -111,7 +111,7 @@ func TestFsmAdvanceWrongFlow(t *testing.T) {
 	}
 
 	fail := func(ctx ContextOperator) error { return newFsmErrorRuntime("fail", nil) }
-	fsm = NewFsm(MakeFsmStructure(nil,
+	fsm = NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", fail)),
 		NewState("2", nil),
 	))
@@ -125,7 +125,7 @@ func TestFsmAdvanceWrongFlow(t *testing.T) {
 
 func TestFsmAdvanceGuardError(t *testing.T) {
 	guard := func(ctx ContextAccessor) (bool, error) { return false, newFsmErrorRuntime("fail", nil) }
-	fsm := NewFsm(MakeFsmStructure(nil,
+	fsm := NewFsm(MakeStructure(nil,
 		NewState("1", []Transition{NewTransition("1-2", "2", guard, nil)}),
 		NewState("2", nil),
 	))
@@ -137,7 +137,7 @@ func TestFsmAdvanceGuardError(t *testing.T) {
 	}
 
 	guard = func(ctx ContextAccessor) (bool, error) { return false, nil }
-	fsm = NewFsm(MakeFsmStructure(nil,
+	fsm = NewFsm(MakeStructure(nil,
 		NewState("1", []Transition{NewTransition("1-2", "2", guard, nil)}),
 		NewState("2", nil),
 	))
@@ -153,7 +153,7 @@ func TestFsmAdvanceGuardError(t *testing.T) {
 		NewTransition("one", "2", guard, nil),
 		NewTransition("two", "2", guard, nil),
 	}
-	fsm = NewFsm(MakeFsmStructure(nil,
+	fsm = NewFsm(MakeStructure(nil,
 		NewState("1", guard_list),
 		NewState("2", nil),
 	))
@@ -166,7 +166,7 @@ func TestFsmAdvanceGuardError(t *testing.T) {
 }
 
 func TestFsmAdvanceTransitionError(t *testing.T) {
-	fstr := NewFsmStructure()
+	fstr := NewStructure()
 	s1, s2, s3 := NewState("1", nil), NewState("2", nil), NewState("3", NewTransitionAlways("3-11", "s11", nil))
 	fstr.AddStartState(s1, nil)
 	fstr.AddStartState(s2, s1)
@@ -190,7 +190,7 @@ func TestFsmAdvanceTransitionError(t *testing.T) {
 	}
 
 	fail := func(ctx ContextOperator) error { return newFsmErrorRuntime("fail", nil) }
-	fsm = NewFsm(MakeFsmStructure(nil,
+	fsm = NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", fail)),
 		NewState("2", nil),
 	))
@@ -213,7 +213,7 @@ func TestFsmRunFewStatesResult(t *testing.T) {
 	open_guard := func(ctx ContextAccessor) (bool, error) { return true, nil }
 	closed_guard := func(ctx ContextAccessor) (bool, error) { return false, nil }
 
-	fsm := NewFsm(MakeFsmStructure(nil,
+	fsm := NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", succ_action)),
 		NewState("2", []Transition{
 			NewTransition("2-2.1 - open", "2.1 - open", open_guard, should_be_executed),
@@ -237,7 +237,7 @@ func TestFsmRunFewStatesResult(t *testing.T) {
 
 func TestFsmRunResult(t *testing.T) {
 	succ := func(ctx ContextOperator) error { ctx.PutResult(true); return nil }
-	fsm := NewFsm(MakeFsmStructure(nil,
+	fsm := NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", succ)),
 		NewState("2", nil),
 	))
@@ -249,7 +249,7 @@ func TestFsmRunResult(t *testing.T) {
 	}
 
 	fail := func(ctx ContextOperator) error { return newFsmErrorRuntime("fail", nil) }
-	fsm = NewFsm(MakeFsmStructure(nil,
+	fsm = NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", fail)),
 		NewState("2", nil),
 	))

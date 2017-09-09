@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestNewFsmStructure(t *testing.T) {
-	fstr := NewFsmStructure()
+func TestNewStructure(t *testing.T) {
+	fstr := NewStructure()
 	if fstr.start == nil {
 		t.Log("Starting state is nil")
 		t.FailNow()
@@ -20,8 +20,8 @@ func TestNewFsmStructure(t *testing.T) {
 	}
 }
 
-func TestFsmStructureAddStatePositive(t *testing.T) {
-	fstr := NewFsmStructure()
+func TestStructureAddStatePositive(t *testing.T) {
+	fstr := NewStructure()
 	first := NewState("first", NewTransitionAlways("1-2", "second", nil))
 	if err := fstr.AddStartState(first, nil); err != nil {
 		t.Logf("AddState failed: %s", err.Error())
@@ -44,8 +44,8 @@ func TestFsmStructureAddStatePositive(t *testing.T) {
 	}
 }
 
-func TestFsmStructureAddStatesPositive(t *testing.T) {
-	fstr := NewFsmStructure()
+func TestStructureAddStatesPositive(t *testing.T) {
+	fstr := NewStructure()
 	err := fstr.AddStates(
 		nil,
 		NewState("1", NewTransitionAlways("1-2", "2", nil)),
@@ -62,8 +62,8 @@ func TestFsmStructureAddStatesPositive(t *testing.T) {
 	}
 }
 
-func TestFsmStructureAddStateNegative(t *testing.T) {
-	fstr := NewFsmStructure()
+func TestStructureAddStateNegative(t *testing.T) {
+	fstr := NewStructure()
 
 	if err := fstr.AddState(nil, nil); err == nil || err.Kind() != ErrStateIsInvalid {
 		t.Logf("Should detect an error (state is nil): %#v", err)
@@ -95,8 +95,8 @@ func TestFsmStructureAddStateNegative(t *testing.T) {
 	}
 }
 
-func TestFsmStructureValidate(t *testing.T) {
-	fstr := NewFsmStructure()
+func TestStructureValidate(t *testing.T) {
+	fstr := NewStructure()
 	fstr.AddStates(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", nil)),
 		NewState("2", nil),
@@ -107,7 +107,7 @@ func TestFsmStructureValidate(t *testing.T) {
 		t.FailNow()
 	}
 
-	fstr = NewFsmStructure()
+	fstr = NewStructure()
 	fstr.AddStates(nil,
 		NewState("1", NewTransitionAlways("1-2", "3", nil)),
 		NewState("2", nil),
@@ -118,7 +118,7 @@ func TestFsmStructureValidate(t *testing.T) {
 		t.FailNow()
 	}
 
-	fstr = NewFsmStructure()
+	fstr = NewStructure()
 	fstr.AddStates(nil,
 		NewState("1", NewTransitionAlways("1-2", "3", nil)),
 		NewState("2", nil),
@@ -131,7 +131,7 @@ func TestFsmStructureValidate(t *testing.T) {
 		t.FailNow()
 	}
 
-	fstr = NewFsmStructure()
+	fstr = NewStructure()
 	fstr.AddStates(nil,
 		NewState("1", NewTransitionAlways("1-2", "3", nil)),
 		NewState("2", nil),

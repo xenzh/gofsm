@@ -21,7 +21,7 @@ const (
 // Describes finite state machine
 // Contains state meta info, machine entry point and associated data (contexts)
 type Fsm struct {
-	structure *FsmStructure
+	structure *Structure
 	stack     ContextStack
 	history   History
 	fatal     *FsmError
@@ -29,7 +29,7 @@ type Fsm struct {
 
 // NewFsm
 // Constructs new state machine, initializes auto states and structures
-func NewFsm(structure *FsmStructure) *Fsm {
+func NewFsm(structure *Structure) *Fsm {
 	fsm := Fsm{
 		structure: structure,
 		stack:     newContextStack(),
