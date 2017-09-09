@@ -145,14 +145,15 @@ func (fsm *Fsm) Advance() (step HistoryItem, err *FsmError) {
 	var transition *Transition
 	var opened_transitions int
 	for idx := range current.state.Transitions {
-		transition = &current.state.Transitions[idx]
-		open, e := transition.Guard(&fsm.stack)
+		currTransition := &current.state.Transitions[idx]
+		open, e := currTransition.Guard(&fsm.stack)
 		if e != nil {
 			err = newFsmErrorCallbackFailed("guard", e)
 			fsm.goFatal(err)
 			return
 		}
 		if open {
+			transition = currTransition
 			opened_transitions++
 		}
 	}

@@ -203,6 +203,38 @@ func TestFsmAdvanceTransitionError(t *testing.T) {
 	}
 }
 
+func TestFsmRunFewStatesResult(t *testing.T) {
+	succ_action := func(ctx ContextOperator) error { ctx.PutResult(true); return nil }
+	//Will set result to true if executed
+	should_be_executed := func(ctx ContextOperator) error { ctx.PutResult(true); return nil }
+	//set result to false if executed
+	should_not_be_executed := func(ctx ContextOperator) error { ctx.PutResult(false); return nil }
+
+	open_guard := func(ctx ContextAccessor) (bool, error) { return true, nil }
+	closed_guard := func(ctx ContextAccessor) (bool, error) { return false, nil }
+
+	fsm := NewFsm(MakeFsmStructure(nil,
+		NewState("1", NewTransitionAlways("1-2", "2", succ_action)),
+		NewState("2", []Transition{
+			NewTransition("2-2.1 - open", "2.1 - open", open_guard, should_be_executed),
+			NewTransition("2-2.2 - never get here", "2.2 - never get here", closed_guard, should_not_be_executed),
+		}),
+		NewState("2.1 - open", nil),
+		NewState("2.2 - never get here", nil),
+	))
+
+	raw, err := fsm.Run()
+	if err != nil {
+		t.Logf("FSM espected to pass, error: %s", err)
+		t.FailNow()
+	}
+	if raw.(bool) == false {
+		t.Log("FSM should not follow closed transitions")
+		t.Log(Dump(fsm))
+		t.FailNow()
+	}
+}
+
 func TestFsmRunResult(t *testing.T) {
 	succ := func(ctx ContextOperator) error { ctx.PutResult(true); return nil }
 	fsm := NewFsm(MakeFsmStructure(nil,
