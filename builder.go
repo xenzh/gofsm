@@ -130,8 +130,15 @@ func (bld *Builder) FromJsonType(root jsonRoot) *Builder {
 	}
 
 	start, list, err := buildStateHierarchy(jsStates, bld.actions)
-	if err != nil {
+	switch {
+	case err != nil:
 		bld.err = err
+	case start == nil:
+		bld.err = newFsmErrorLoading("Start state is not defined")
+	case len(list) == 0:
+		bld.err = newFsmErrorLoading("State machine is empty")
+	}
+	if bld.err != nil {
 		return bld
 	}
 
@@ -154,7 +161,7 @@ type depStates map[string]*StateInfo
 // States are build so that you have to have a parent to be able to add a substate to the structure.
 // Json doesn't constrain states in any way so they could be in any order.
 // So input json states need to be traversed from topmost parents to downmost children to make a proper structure.
-// This method... TBD
+// Additionally this method scans json state list for several logic/format errors
 func buildStateHierarchy(states jsonStates, actions ActionMap) (start *StateInfo, list depStates, err *FsmError) {
 	count := len(states)
 
@@ -175,29 +182,17 @@ func buildStateHierarchy(states jsonStates, actions ActionMap) (start *StateInfo
 		graph[i] = make([]bool, count)
 	}
 	for name, state := range states {
-		if len(state.Parent) == 0 {
-			continue
+		if len(state.Parent) > 0 {
+			i := indexes[name]
+			j := indexes[state.Parent]
+			graph[i][j] = true
 		}
-
-		i := indexes[name]
-		j := indexes[state.Parent]
-		graph[i][j] = true
-	}
-
-	// TEST: draw the graph
-	fmt.Printf("\n\n")
-	for _, v := range names {
-		fmt.Printf("\t%s", v)
-	}
-	fmt.Printf("\n")
-	for i, _ := range graph {
-		fmt.Printf("%s |\t", names[i])
-		for j, _ := range graph[i] {
-			fmt.Printf("%v\t", graph[i][j])
+		if len(state.StartSubState) > 0 {
+			i := indexes[state.StartSubState]
+			j := indexes[name]
+			graph[i][j] = true
 		}
-		fmt.Printf("\n")
 	}
-	fmt.Printf("\n")
 
 	// satisfy dependencies of every state
 	list = make(depStates)
@@ -213,18 +208,19 @@ func buildStateHierarchy(states jsonStates, actions ActionMap) (start *StateInfo
 	return
 }
 
+// satisfyDependencies
+// Recursively adds given state parents to the hierarcy
+// Detects errors such as state dependency cycles or >1 entry points
 func satisfyDependencies(
-	index int,
-	graph depGraph,
-	markers depMarkers,
-	names []string,
-	source jsonStates,
-	actions ActionMap,
-	start **StateInfo,
-	dest depStates,
+	index int, // index of the state to process
+	graph depGraph, // graph describing parent-child dependencies
+	markers depMarkers, // helper flags needed to skip processing the same state several times and to detect cycles
+	names []string, // state index to name mapping
+	source jsonStates, // map of states unmarshalled from json
+	actions ActionMap, // state actions for creation of StateInfo objects
+	start **StateInfo, // (out) start StateInfo object (FSM entry point)
+	dest depStates, // (out) result map containing StateInfo objects in proper hierarchy
 ) *FsmError {
-
-	fmt.Printf("sdep, idx: %d, markers: %v\n", index, markers)
 
 	if markers[index].visiting {
 		return newFsmErrorLoading("State hierarchy is cycled")
@@ -253,7 +249,6 @@ func satisfyDependencies(
 
 	var parent *StateInfo
 	if parentName != "" {
-		fmt.Printf("looking for parent %s for %s, start: %v\n", parentName, name, *start)
 		var found bool
 		if *start != nil && (*start).Name == parentName {
 			parent = *start
@@ -263,9 +258,9 @@ func satisfyDependencies(
 		}
 
 		if !found {
-			what := fmt.Sprintf("Parent (%s) is expected to be added before the child (%s)",
+			cause := fmt.Sprintf("Internal error: parent (%s) is to be added before the child (%s)",
 				parentName, name)
-			return newFsmErrorLoading(what)
+			return newFsmErrorLoading(cause)
 		}
 	}
 
@@ -275,13 +270,14 @@ func satisfyDependencies(
 	}
 
 	if source[name].Start {
-		fmt.Printf("found and set a start, %s\n", name)
+		if *start != nil {
+			cause := fmt.Sprintf("Several start states defined (%s, %s)", (*start).Name, si.Name)
+			return newFsmErrorLoading(cause)
+		}
 		*start = si
 	} else {
 		dest[name] = si
 	}
-
-	fmt.Printf("\t sdep idx: %d, added & quit\n", index)
 
 	return nil
 }

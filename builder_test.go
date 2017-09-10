@@ -1,7 +1,6 @@
 package simple_fsm
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -35,6 +34,29 @@ func checkState(t *testing.T, st *StateInfo, parent string) {
 
 func TestBuildStateHierarchyPositive1(t *testing.T) {
 	js := makeJsonStates(
+		pC{"0", "", ""},
+		pC{"1", "", ""},
+		pC{"2", "", ""},
+	)
+
+	start, list, err := buildStateHierarchy(js, ActionMap{})
+	if err != nil {
+		t.Logf("Hierarchy building unexpectedly failed: %s", err.Error())
+		t.FailNow()
+	}
+
+	if start == nil || start.Name != "0" {
+		t.Log("Start state is different from expected")
+		t.FailNow()
+	}
+
+	checkState(t, start, "")
+	checkState(t, list["1"], "")
+	checkState(t, list["2"], "")
+}
+
+func TestBuildStateHierarchyPositive2(t *testing.T) {
+	js := makeJsonStates(
 		pC{"0", "", "1"},
 		pC{"1", "0", ""},
 		pC{"2", "0", ""},
@@ -56,7 +78,7 @@ func TestBuildStateHierarchyPositive1(t *testing.T) {
 	checkState(t, list["2"], "0")
 }
 
-func TestBuildStateHierarchyPositive2(t *testing.T) {
+func TestBuildStateHierarchyPositive3(t *testing.T) {
 	js := makeJsonStates(
 		pC{"0", "", "1"},
 		pC{"31", "2", ""},
@@ -73,17 +95,6 @@ func TestBuildStateHierarchyPositive2(t *testing.T) {
 		t.FailNow()
 	}
 
-	t.Logf("start state: %s (parent: %v)", start.Name, start.Parent)
-	for k, v := range list {
-		parentName := "(none)"
-		if v.Parent != nil {
-			parentName = v.Parent.Name
-		}
-		st := fmt.Sprintf("%s (parent: %s)", k, parentName)
-		t.Logf("%s\n", st)
-	}
-	//t.FailNow()
-
 	if start == nil || start.Name != "0" {
 		t.Log("Start state is different from expected")
 		t.FailNow()
@@ -99,5 +110,32 @@ func TestBuildStateHierarchyPositive2(t *testing.T) {
 }
 
 func TestBuildStateHierarchyCycled(t *testing.T) {
+	js := makeJsonStates(
+		pC{"0", "", "1"},
+		pC{"1", "0", "2"},
+		pC{"2", "1", "3"},
+		pC{"3", "2", "0"},
+	)
 
+	_, _, err := buildStateHierarchy(js, ActionMap{})
+	if err == nil || err.Kind() != ErrFsmLoading {
+		t.Log("Hierarchy building is expected to fail (state hierarchy cycled)")
+		t.FailNow()
+	}
+}
+
+func TestBuildStateSeveralEntryPoints(t *testing.T) {
+	js := makeJsonStates(
+		pC{"0", "", "1"},
+		pC{"1", "0", "2"},
+		pC{"2", "1", "3"},
+		pC{"3", "2", ""},
+	)
+	js["4"] = jsonState{true, "", "2", nil}
+
+	_, _, err := buildStateHierarchy(js, ActionMap{})
+	if err == nil || err.Kind() != ErrFsmLoading {
+		t.Log("Hierarchy building is expected to fail (several entry points)")
+		t.FailNow()
+	}
 }
