@@ -67,10 +67,8 @@ func (bld *Builder) FromJsonFile(path string) *Builder {
 // Json format (see fsm-sample.json):
 // {
 //     "states": {                             -- required key name for state list
-//         "global": {                         -- required key name for FSM entry point
-//             "startsub": "1"                 -- required field, FSM entry state
-//         },
 //         "0": {                              -- no parent key implies global parent (topmost state)
+//             "start": true,                  -- indicates FSM entry point, should be exactly 1
 //             "startsub": "1"                 -- parent state can't have custom transitions, only start substate
 //         },
 //         "1": {
@@ -186,11 +184,28 @@ func buildStateHierarchy(states jsonStates, actions ActionMap) (start *StateInfo
 		graph[i][j] = true
 	}
 
+	// TEST: draw the graph
+	fmt.Printf("\n\n")
+	for _, v := range names {
+		fmt.Printf("\t%s", v)
+	}
+	fmt.Printf("\n")
+	for i, _ := range graph {
+		fmt.Printf("%s |\t", names[i])
+		for j, _ := range graph[i] {
+			fmt.Printf("%v\t", graph[i][j])
+		}
+		fmt.Printf("\n")
+	}
+	fmt.Printf("\n")
+
 	// satisfy dependencies of every state
 	list = make(depStates)
 	markers := make(depMarkers, count)
+
 	for _, idx := range indexes {
-		if err = satisfyDependencies(idx, nil, graph, markers, names, states, list, actions); err != nil {
+		err = satisfyDependencies(idx, graph, markers, names, states, actions, &start, list)
+		if err != nil {
 			break
 		}
 	}
@@ -200,14 +215,16 @@ func buildStateHierarchy(states jsonStates, actions ActionMap) (start *StateInfo
 
 func satisfyDependencies(
 	index int,
-	parentIndex *int,
 	graph depGraph,
 	markers depMarkers,
 	names []string,
 	source jsonStates,
-	dest depStates,
 	actions ActionMap,
+	start **StateInfo,
+	dest depStates,
 ) *FsmError {
+
+	fmt.Printf("sdep, idx: %d, markers: %v\n", index, markers)
 
 	if markers[index].visiting {
 		return newFsmErrorLoading("State hierarchy is cycled")
@@ -217,10 +234,14 @@ func satisfyDependencies(
 	}
 
 	markers[index].visiting = true
+	defer func() {
+		markers[index].visited = true
+		markers[index].visiting = false
+	}()
 
 	for on, depends := range graph[index] {
 		if depends {
-			err := satisfyDependencies(on, &index, graph, markers, names, source, dest, actions)
+			err := satisfyDependencies(on, graph, markers, names, source, actions, start, dest)
 			if err != nil {
 				return err
 			}
@@ -228,11 +249,23 @@ func satisfyDependencies(
 	}
 
 	name := names[index]
+	parentName := source[name].Parent
+
 	var parent *StateInfo
-	if parentIndex != nil {
-		parent = dest[names[*parentIndex]]
-		if parent == nil {
-			return newFsmErrorLoading("Parent is expected to be added before the child")
+	if parentName != "" {
+		fmt.Printf("looking for parent %s for %s, start: %v\n", parentName, name, *start)
+		var found bool
+		if *start != nil && (*start).Name == parentName {
+			parent = *start
+			found = true
+		} else {
+			parent, found = dest[parentName]
+		}
+
+		if !found {
+			what := fmt.Sprintf("Parent (%s) is expected to be added before the child (%s)",
+				parentName, name)
+			return newFsmErrorLoading(what)
 		}
 	}
 
@@ -241,10 +274,14 @@ func satisfyDependencies(
 		return err
 	}
 
-	dest[name] = si
+	if source[name].Start {
+		fmt.Printf("found and set a start, %s\n", name)
+		*start = si
+	} else {
+		dest[name] = si
+	}
 
-	markers[index].visited = true
-	markers[index].visiting = true
+	fmt.Printf("\t sdep idx: %d, added & quit\n", index)
 
 	return nil
 }

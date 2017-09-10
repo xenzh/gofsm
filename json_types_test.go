@@ -132,6 +132,7 @@ func TestJsonTransitionFn(t *testing.T) {
 func TestJsonStateUnmarshalValid1(t *testing.T) {
 	rawJson := `
 	{
+		"start": true,
 		"startsub": "11"
 	}`
 

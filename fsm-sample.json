@@ -1,9 +1,7 @@
 {
   "states": {
-    "global": {
-      "startsub": "1"
-    },
     "1": {
+      "start": true,
       "startsub": "11"
     },
     "11": {

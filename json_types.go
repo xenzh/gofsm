@@ -61,6 +61,7 @@ func (jt *jsonTransition) Transition(name string, actions ActionMap) (tr Transit
 }
 
 type jsonState struct {
+	Start         bool                      `json:"start"`
 	StartSubState string                    `json:"startsub"`
 	Parent        string                    `json:"parent"`
 	Transitions   map[string]jsonTransition `json:"transitions"`
