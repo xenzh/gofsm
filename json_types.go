@@ -17,16 +17,36 @@ func (jg *jsonGuard) GuardFn() (guard GuardFn, err *FsmError) {
 		guard = func(ctx ContextAccessor) (bool, error) { return true, nil }
 	case "context":
 		if len(jg.Key) == 0 || jg.Value == nil {
-			err = newFsmErrorInvalid("no key/value specified")
+			err = newFsmErrorInvalid("No key/value specified")
 			return
 		}
-		guard = func(ctx ContextAccessor) (bool, error) {
-			raw, err := ctx.Raw(jg.Key)
-			if err == nil {
-				return raw == jg.Value, nil
+		// this extra closure is required to evaluate jg.Key and jg.Value values as parameters
+		// in order to avoid all guards closures referencing the same key/value objects
+		// from last transition object of the state
+		guard = func(key string, value interface{}) GuardFn {
+			return func(ctx ContextAccessor) (bool, error) {
+				var open bool
+				raw, e := ctx.Raw(key)
+				if e == nil {
+					// See https://blog.golang.org/json-and-go for default unmarshal types
+					switch v := value.(type) {
+					case bool, string, nil:
+						open = v == raw
+					case float64:
+						var fl float64
+						fl, e = castToFloat64(raw)
+						open = (e == nil && v == fl)
+					default:
+						e = newFsmErrorInvalid("Internal error: unknown unmarshalled type")
+					}
+				}
+				if e == nil {
+					return open, nil
+				} else {
+					return open, e
+				}
 			}
-			return false, err
-		}
+		}(jg.Key, jg.Value)
 	default:
 		err = newFsmErrorInvalid("unknown guard type")
 	}
@@ -74,7 +94,8 @@ func (js jsonState) StateInfo(name string, parent *StateInfo, actions ActionMap)
 			err = newFsmErrorInvalid("State w/ start sub state can't have custom transitions")
 			return
 		}
-		si = NewState(name, NewTransitionAlways("always", js.StartSubState, nil))
+		trName := fmt.Sprintf("Always %s->%s", name, js.StartSubState)
+		si = NewState(name, NewTransitionAlways(trName, js.StartSubState, nil))
 		start = true
 	} else {
 		trs := make([]Transition, 0, len(js.Transitions))

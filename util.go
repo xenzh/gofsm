@@ -2,6 +2,7 @@ package simple_fsm
 
 import (
 	"bytes"
+	"reflect"
 )
 
 // Dumper
@@ -17,4 +18,22 @@ func Dump(obj Dumper) string {
 	buf := bytes.NewBufferString("")
 	obj.dump(buf, 0)
 	return buf.String()
+}
+
+// castToFloat64
+// Tries to cast anything to float64 (aka universal number type)
+// using reflection
+func castToFloat64(what interface{}) (fl float64, err *FsmError) {
+	v := reflect.ValueOf(what)
+	v = reflect.Indirect(v)
+
+	floatType := reflect.TypeOf(fl)
+	if !v.Type().ConvertibleTo(floatType) {
+		err = newFsmErrorRuntime("Cannot convert to float64", what)
+		return
+	}
+
+	fv := v.Convert(floatType)
+	fl = fv.Float()
+	return
 }

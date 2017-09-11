@@ -13,6 +13,7 @@ type ContextAccessor interface {
 	Raw(string) (interface{}, *FsmError)
 	Bool(string) (bool, *FsmError)
 	Int(string) (int, *FsmError)
+	Float(string) (float64, *FsmError)
 	Str(string) (string, *FsmError)
 }
 
@@ -100,6 +101,20 @@ func (ctx *Context) Int(key string) (value int, err *FsmError) {
 	if raw, err = ctx.Raw(key); err == nil {
 		var ok bool
 		if value, ok = raw.(int); !ok {
+			err = newCtxErrorInvalidType(value, raw)
+		}
+	}
+	return
+}
+
+// ContextAccessor.Float
+// Searches for given key in the context,
+// Casts value to float64 and returns it
+func (ctx *Context) Float(key string) (value float64, err *FsmError) {
+	var raw interface{}
+	if raw, err = ctx.Raw(key); err == nil {
+		var ok bool
+		if value, ok = raw.(float64); !ok {
 			err = newCtxErrorInvalidType(value, raw)
 		}
 	}

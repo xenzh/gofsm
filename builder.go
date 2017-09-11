@@ -29,12 +29,12 @@ func NewBuilder(actions ActionMap) *Builder {
 // Structure
 // Returns constructed state machine structure or an construction fail error
 func (bld *Builder) Structure() (fstr *Structure, err *FsmError) {
-	if bld.fstr == nil || bld.fstr.Empty() {
-		err = newFsmErrorLoading("FSM structure is not created yet")
-		return
-	}
 	if bld.err != nil {
 		err = bld.err
+		return
+	}
+	if bld.fstr == nil || bld.fstr.Empty() {
+		err = newFsmErrorLoading("FSM structure is not created yet")
 		return
 	}
 	if err = bld.fstr.Validate(); err == nil {
@@ -46,7 +46,7 @@ func (bld *Builder) Structure() (fstr *Structure, err *FsmError) {
 // FromJsonFile
 // Constructs state machine structure from json file (see json format below)
 func (bld *Builder) FromJsonFile(path string) *Builder {
-	if bld.err != nil || bld.fstr.Empty() {
+	if bld.err != nil || !bld.fstr.Empty() {
 		return bld
 	}
 
@@ -102,7 +102,7 @@ func (bld *Builder) FromJsonFile(path string) *Builder {
 //     }
 // }
 func (bld *Builder) FromRawJson(rawJson []byte) *Builder {
-	if bld.err != nil || bld.fstr.Empty() {
+	if bld.err != nil || !bld.fstr.Empty() {
 		return bld
 	}
 
@@ -119,7 +119,7 @@ func (bld *Builder) FromRawJson(rawJson []byte) *Builder {
 // FromJsonType
 // Constructs state machine structure from unmarshalled json data structure
 func (bld *Builder) FromJsonType(root jsonRoot) *Builder {
-	if bld.err != nil || bld.fstr.Empty() {
+	if bld.err != nil || !bld.fstr.Empty() {
 		return bld
 	}
 

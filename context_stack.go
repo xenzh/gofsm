@@ -189,6 +189,20 @@ func (st *ContextStack) Int(key string) (value int, err *FsmError) {
 	return
 }
 
+// ContextAccessor.Float
+// Searches for given key in all contexts present in the stack,
+// from head to tail, casts value to float and returns it
+func (st *ContextStack) Float(key string) (value float64, err *FsmError) {
+	var raw interface{}
+	if raw, err = st.Raw(key); err == nil {
+		var ok bool
+		if value, ok = raw.(float64); !ok {
+			err = newCtxErrorInvalidType(value, raw)
+		}
+	}
+	return
+}
+
 // ContextAccessor.Str
 // Searches for given key in all contexts present in the stack,
 // from head to tail, casts value to string and returns it

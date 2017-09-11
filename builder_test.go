@@ -139,3 +139,37 @@ func TestBuildStateSeveralEntryPoints(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestBuilderFromJsonFile(t *testing.T) {
+	actions := ActionMap{
+		"setnext": func(ctx ContextOperator) error {
+			ctx.Put("next", 14)
+			return nil
+		},
+		"setresult13": func(ctx ContextOperator) error {
+			ctx.PutResult(13)
+			return nil
+		},
+		"setresult42": func(ctx ContextOperator) error {
+			ctx.PutResult(42)
+			return nil
+		},
+	}
+	fstr, berr := NewBuilder(actions).FromJsonFile("./fsm-sample.json").Structure()
+	if berr != nil {
+		t.Logf("Structure construction failed, %s", berr.Error())
+		t.FailNow()
+	}
+
+	fsm := NewFsm(fstr)
+	res, rerr := fsm.Run()
+	if rerr != nil {
+		t.Logf("Loaded FSM execution failed: %s", rerr.Error())
+		t.Logf("State machine dump:\n%s", Dump(fsm))
+		t.FailNow()
+	}
+	if val, ok := res.(int); !ok || val != 42 {
+		t.Logf("FSM result (%v) is different from extected (%v)", val, 42)
+		t.FailNow()
+	}
+}
