@@ -106,7 +106,7 @@ func (bld *Builder) FromRawJson(rawJson []byte) *Builder {
 		return bld
 	}
 
-	root := make(jsonRoot)
+	root := make(JsonRoot)
 	if err := json.Unmarshal(rawJson, &root); err != nil {
 		cause := fmt.Sprintf("Unmarshalling error occured: %s", err.Error())
 		bld.err = newFsmErrorLoading(cause)
@@ -118,7 +118,7 @@ func (bld *Builder) FromRawJson(rawJson []byte) *Builder {
 
 // FromJsonType
 // Constructs state machine structure from unmarshalled json data structure
-func (bld *Builder) FromJsonType(root jsonRoot) *Builder {
+func (bld *Builder) FromJsonType(root JsonRoot) *Builder {
 	if bld.err != nil || !bld.fstr.Empty() {
 		return bld
 	}
@@ -162,7 +162,7 @@ type depStates map[string]*StateInfo
 // Json doesn't constrain states in any way so they could be in any order.
 // So input json states need to be traversed from topmost parents to downmost children to make a proper structure.
 // Additionally this method scans json state list for several logic/format errors
-func buildStateHierarchy(states jsonStates, actions ActionMap) (start *StateInfo, list depStates, err *FsmError) {
+func buildStateHierarchy(states JsonStates, actions ActionMap) (start *StateInfo, list depStates, err *FsmError) {
 	count := len(states)
 
 	// map state indexes to names
@@ -216,7 +216,7 @@ func satisfyDependencies(
 	graph depGraph, // graph describing parent-child dependencies
 	markers depMarkers, // helper flags needed to skip processing the same state several times and to detect cycles
 	names []string, // state index to name mapping
-	source jsonStates, // map of states unmarshalled from json
+	source JsonStates, // map of states unmarshalled from json
 	actions ActionMap, // state actions for creation of StateInfo objects
 	start **StateInfo, // (out) start StateInfo object (FSM entry point)
 	dest depStates, // (out) result map containing StateInfo objects in proper hierarchy

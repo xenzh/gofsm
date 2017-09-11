@@ -10,14 +10,14 @@ type pC struct {
 	ssub   string
 }
 
-func makeJsonStates(start pC, pcs ...pC) jsonStates {
-	js := make(jsonStates)
-	trm := make(map[string]jsonTransition)
+func makeJsonStates(start pC, pcs ...pC) JsonStates {
+	js := make(JsonStates)
+	trm := make(map[string]JsonTransition)
 
-	js[start.state] = jsonState{true, start.ssub, "", trm}
+	js[start.state] = JsonState{true, start.ssub, "", trm}
 
 	for _, pc := range pcs {
-		js[pc.state] = jsonState{false, pc.ssub, pc.parent, trm}
+		js[pc.state] = JsonState{false, pc.ssub, pc.parent, trm}
 	}
 	return js
 }
@@ -131,7 +131,7 @@ func TestBuildStateSeveralEntryPoints(t *testing.T) {
 		pC{"2", "1", "3"},
 		pC{"3", "2", ""},
 	)
-	js["4"] = jsonState{true, "", "2", nil}
+	js["4"] = JsonState{true, "", "2", nil}
 
 	_, _, err := buildStateHierarchy(js, ActionMap{})
 	if err == nil || err.Kind() != ErrFsmLoading {

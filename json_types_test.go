@@ -12,7 +12,7 @@ func TestJsonGuardUnmarshal(t *testing.T) {
         "key": "hello",
         "value": "world"
     }`
-	var jg jsonGuard
+	var jg JsonGuard
 	if err := json.Unmarshal([]byte(rawJson), &jg); err != nil {
 		t.Logf("Unmarshalling failed: %s", err.Error())
 		t.FailNow()
@@ -24,7 +24,7 @@ func TestJsonGuardUnmarshal(t *testing.T) {
 }
 
 func TestJsonGuardFnAlwaysExplicit(t *testing.T) {
-	jg := jsonGuard{"always", "", ""}
+	jg := JsonGuard{"always", "", ""}
 	guard, err := jg.GuardFn()
 	if err != nil {
 		t.Logf("Expected to succeed, error: %v", err)
@@ -38,7 +38,7 @@ func TestJsonGuardFnAlwaysExplicit(t *testing.T) {
 }
 
 func TestJsonGuardFnAlwaysImplicit(t *testing.T) {
-	jg := jsonGuard{"", "", ""}
+	jg := JsonGuard{"", "", ""}
 	guard, err := jg.GuardFn()
 	if err != nil {
 		t.Logf("Expected to succeed, error: %v", err)
@@ -52,7 +52,7 @@ func TestJsonGuardFnAlwaysImplicit(t *testing.T) {
 }
 
 func TestJsonGuardFnContext(t *testing.T) {
-	jg := jsonGuard{"context", "hello", "world"}
+	jg := JsonGuard{"context", "hello", "world"}
 	guard, err := jg.GuardFn()
 	if err != nil {
 		t.Logf("Expected to succeed, error: %v", err)
@@ -76,18 +76,18 @@ func TestJsonGuardFnContext(t *testing.T) {
 }
 
 func TestJsonGuardFnContextIllFormed(t *testing.T) {
-	jg := jsonGuard{"invalid", "", ""}
+	jg := JsonGuard{"invalid", "", ""}
 	if _, err := jg.GuardFn(); err == nil {
 		t.Log("Expected to fail (unknown guard type)")
 		t.FailNow()
 	}
 
-	jg = jsonGuard{"context", "", nil}
+	jg = JsonGuard{"context", "", nil}
 	if _, err := jg.GuardFn(); err == nil {
 		t.Log("Expected to fail (no key/value specified)")
 		t.FailNow()
 	}
-	jg = jsonGuard{"context", "key", nil}
+	jg = JsonGuard{"context", "key", nil}
 	if _, err := jg.GuardFn(); err == nil {
 		t.Log("Expected to fail (no key/value specified)")
 		t.FailNow()
@@ -103,7 +103,7 @@ func TestJsonTransitionUnmarshal(t *testing.T) {
             "type": "always"
         }
     }`
-	var jt jsonTransition
+	var jt JsonTransition
 	if err := json.Unmarshal([]byte(rawJson), &jt); err != nil {
 		t.Logf("Unmarshalling failed: %s", err.Error())
 		t.FailNow()
@@ -115,7 +115,7 @@ func TestJsonTransitionUnmarshal(t *testing.T) {
 }
 
 func TestJsonTransitionFn(t *testing.T) {
-	jt := jsonTransition{"2", jsonGuard{"always", "", nil}, "hello"}
+	jt := JsonTransition{"2", JsonGuard{"always", "", nil}, "hello"}
 	act := make(ActionMap)
 	if _, err := jt.Transition("1-2", act); err == nil || err.Kind() != ErrFsmIsInvalid {
 		t.Log("Expected to fail (no action found)")
@@ -136,7 +136,7 @@ func TestJsonStateUnmarshalValid1(t *testing.T) {
 		"startsub": "11"
 	}`
 
-	var js jsonState
+	var js JsonState
 	if err := json.Unmarshal([]byte(rawJson), &js); err != nil {
 		t.Logf("Unmarshalling failed: %s", err.Error())
 		t.FailNow()
@@ -162,7 +162,7 @@ func TestJsonStateUnmarshalValid2(t *testing.T) {
 		}
 	}`
 
-	var js jsonState
+	var js JsonState
 	if err := json.Unmarshal([]byte(rawJson), &js); err != nil {
 		t.Logf("Unmarshalling failed: %s", err.Error())
 		t.FailNow()
@@ -180,7 +180,7 @@ func TestJsonStartStateInfoValid(t *testing.T) {
 		"startsub": "111"
 	}`
 
-	var js jsonState
+	var js JsonState
 	json.Unmarshal([]byte(rawJson), &js)
 
 	act := make(map[string]ActionFn)
@@ -212,7 +212,7 @@ func TestJsonSubStateInfoValid(t *testing.T) {
 		}
 	}`
 
-	var js jsonState
+	var js JsonState
 	json.Unmarshal([]byte(rawJson), &js)
 
 	act := ActionMap{"setnext": func(ctx ContextOperator) error { return nil }}
@@ -249,7 +249,7 @@ func TestJsonStateInfoInvalidParameters(t *testing.T) {
 		}
 	}`
 
-	var js jsonState
+	var js JsonState
 	json.Unmarshal([]byte(rawJson), &js)
 
 	act := ActionMap{"setnext": func(ctx ContextOperator) error { return nil }}
@@ -280,7 +280,7 @@ func TestJsonStateInfoIllFormed(t *testing.T) {
 		}
 	}`
 
-	var js jsonState
+	var js JsonState
 	json.Unmarshal([]byte(rawJson), &js)
 
 	act := ActionMap{"setnext": func(ctx ContextOperator) error { return nil }}

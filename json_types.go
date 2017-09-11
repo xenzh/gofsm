@@ -4,13 +4,13 @@ import (
 	"fmt"
 )
 
-type jsonGuard struct {
+type JsonGuard struct {
 	Type  string      `json:"type"`
 	Key   string      `json:"key"`
 	Value interface{} `json:"value"`
 }
 
-func (jg *jsonGuard) GuardFn() (guard GuardFn, err *FsmError) {
+func (jg *JsonGuard) GuardFn() (guard GuardFn, err *FsmError) {
 	switch jg.Type {
 	case "always", "":
 		// empty value means no guard specified => unconditional transition implication
@@ -53,13 +53,13 @@ func (jg *jsonGuard) GuardFn() (guard GuardFn, err *FsmError) {
 	return
 }
 
-type jsonTransition struct {
+type JsonTransition struct {
 	ToState string    `json:"to"`
-	Guard   jsonGuard `json:"guard"`
+	Guard   JsonGuard `json:"guard"`
 	Action  string    `json:"action"`
 }
 
-func (jt *jsonTransition) Transition(name string, actions ActionMap) (tr Transition, err *FsmError) {
+func (jt *JsonTransition) Transition(name string, actions ActionMap) (tr Transition, err *FsmError) {
 	var action ActionFn
 	if len(jt.Action) > 0 {
 		if act, present := actions[jt.Action]; !present {
@@ -80,14 +80,14 @@ func (jt *jsonTransition) Transition(name string, actions ActionMap) (tr Transit
 	return
 }
 
-type jsonState struct {
+type JsonState struct {
 	Start         bool                      `json:"start"`
 	StartSubState string                    `json:"startsub"`
 	Parent        string                    `json:"parent"`
-	Transitions   map[string]jsonTransition `json:"transitions"`
+	Transitions   map[string]JsonTransition `json:"transitions"`
 }
 
-func (js jsonState) StateInfo(name string, parent *StateInfo, actions ActionMap) (si *StateInfo, err *FsmError) {
+func (js JsonState) StateInfo(name string, parent *StateInfo, actions ActionMap) (si *StateInfo, err *FsmError) {
 	var start bool
 	if len(js.StartSubState) > 0 {
 		if len(js.Transitions) > 0 {
@@ -126,5 +126,5 @@ func (js jsonState) StateInfo(name string, parent *StateInfo, actions ActionMap)
 	return
 }
 
-type jsonStates map[string]jsonState
-type jsonRoot map[string]jsonStates
+type JsonStates map[string]JsonState
+type JsonRoot map[string]JsonStates
