@@ -51,6 +51,17 @@ func (fsm *Fsm) Reset() {
 	fsm.fatal = nil
 }
 
+// SetInput
+// Adds/modifies a named value into FSM's global context
+// Makes sense only in idle state
+func (fsm *Fsm) SetInput(key string, value interface{}) *FsmError {
+	if !fsm.Idle() {
+		return newFsmErrorWrongFlow("set input parameter", "not idle")
+	}
+	fsm.stack.Global().Put(key, value)
+	return nil
+}
+
 // initStackAutoStates
 // Populates stack with automatic stuff (default global state, as of now)
 func (fsm *Fsm) initStackAutoStates() {
