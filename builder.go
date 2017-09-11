@@ -79,7 +79,12 @@ func (bld *Builder) FromJsonFile(path string) *Builder {
 //                     "guard": {              -- no guard key implies unconditional transition
 //                         "type": "always"    -- can be either unconditional or conditional (see below)
 //                     },
-//                     "action": "setnext"     -- action key should be present in builder's ActionMap
+//                     "action": {             -- optional action to be executed on state transition
+//                         "name": "setnext",  -- action key should be present in builder's ActionMap
+//                         "params": {         -- optional parameter list (see PackagedAction for more info)
+//	                           "key": 42       -- parameters may have one of json types
+//                         }
+//                     }
 //                 }
 //             }
 //         },

@@ -29,7 +29,7 @@
           "guard": {
             "type": "context",
             "key": "next",
-            "value": "13"
+            "value": 13
           },
           "action": {
             "name": "setresult13"

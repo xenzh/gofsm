@@ -143,7 +143,13 @@ func TestBuildStateSeveralEntryPoints(t *testing.T) {
 func TestBuilderFromJsonFile(t *testing.T) {
 	actions := ActionMap{
 		"setnext": func(ctx ContextOperator) error {
-			ctx.Put("next", 14)
+			fl, err := ctx.Float("setthis")
+			if err != nil {
+				return err
+			}
+
+			testGuardFloatConversion := int(fl)
+			ctx.Put("next", testGuardFloatConversion)
 			return nil
 		},
 		"setresult13": func(ctx ContextOperator) error {

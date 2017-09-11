@@ -226,7 +226,7 @@ func (fsm *Fsm) Advance() (step HistoryItem, err *FsmError) {
 	fsm.history = append(fsm.history, step)
 
 	if transition.Action != nil {
-		if e := transition.Action(&fsm.stack); e != nil {
+		if e := transition.Action.Do(&fsm.stack); e != nil {
 			err = newFsmErrorCallbackFailed("entry action", e)
 			fsm.goFatal(err)
 		}

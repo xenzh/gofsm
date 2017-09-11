@@ -35,7 +35,7 @@ func TestFsmFlow(t *testing.T) {
 		return true
 	}
 
-	succ := func(ctx ContextOperator) error { ctx.PutResult(true); return nil }
+	succ := NewAction(func(ctx ContextOperator) error { ctx.PutResult(true); return nil })
 	fsm := NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", succ)),
 		NewState("2", nil),
@@ -68,7 +68,7 @@ func TestFsmFlow(t *testing.T) {
 		t.FailNow()
 	}
 
-	fail := func(ctx ContextOperator) error { return newFsmErrorRuntime("fail", nil) }
+	fail := NewAction(func(ctx ContextOperator) error { return newFsmErrorRuntime("fail", nil) })
 	fsm = NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", fail)),
 		NewState("2", nil),
@@ -110,7 +110,7 @@ func TestFsmAdvanceWrongFlow(t *testing.T) {
 		t.FailNow()
 	}
 
-	fail := func(ctx ContextOperator) error { return newFsmErrorRuntime("fail", nil) }
+	fail := NewAction(func(ctx ContextOperator) error { return newFsmErrorRuntime("fail", nil) })
 	fsm = NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", fail)),
 		NewState("2", nil),
@@ -189,7 +189,7 @@ func TestFsmAdvanceTransitionError(t *testing.T) {
 		t.FailNow()
 	}
 
-	fail := func(ctx ContextOperator) error { return newFsmErrorRuntime("fail", nil) }
+	fail := NewAction(func(ctx ContextOperator) error { return newFsmErrorRuntime("fail", nil) })
 	fsm = NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", fail)),
 		NewState("2", nil),
@@ -204,11 +204,9 @@ func TestFsmAdvanceTransitionError(t *testing.T) {
 }
 
 func TestFsmRunFewStatesResult(t *testing.T) {
-	succ_action := func(ctx ContextOperator) error { ctx.PutResult(true); return nil }
-	//Will set result to true if executed
-	should_be_executed := func(ctx ContextOperator) error { ctx.PutResult(true); return nil }
-	//set result to false if executed
-	should_not_be_executed := func(ctx ContextOperator) error { ctx.PutResult(false); return nil }
+	succ_action := NewAction(func(ctx ContextOperator) error { ctx.PutResult(true); return nil })
+	should_be_executed := NewAction(func(ctx ContextOperator) error { ctx.PutResult(true); return nil })
+	should_not_be_executed := NewAction(func(ctx ContextOperator) error { ctx.PutResult(false); return nil })
 
 	open_guard := func(ctx ContextAccessor) (bool, error) { return true, nil }
 	closed_guard := func(ctx ContextAccessor) (bool, error) { return false, nil }
@@ -236,7 +234,7 @@ func TestFsmRunFewStatesResult(t *testing.T) {
 }
 
 func TestFsmRunResult(t *testing.T) {
-	succ := func(ctx ContextOperator) error { ctx.PutResult(true); return nil }
+	succ := NewAction(func(ctx ContextOperator) error { ctx.PutResult(true); return nil })
 	fsm := NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", succ)),
 		NewState("2", nil),
@@ -248,7 +246,7 @@ func TestFsmRunResult(t *testing.T) {
 		t.FailNow()
 	}
 
-	fail := func(ctx ContextOperator) error { return newFsmErrorRuntime("fail", nil) }
+	fail := NewAction(func(ctx ContextOperator) error { return newFsmErrorRuntime("fail", nil) })
 	fsm = NewFsm(MakeStructure(nil,
 		NewState("1", NewTransitionAlways("1-2", "2", fail)),
 		NewState("2", nil),
