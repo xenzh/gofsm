@@ -43,6 +43,17 @@ func (bld *Builder) Structure() (fstr *Structure, err *FsmError) {
 	return
 }
 
+// Fsm
+// Returns state machine object, constructed from the structure
+func (bld *Builder) Fsm() (fsm *Fsm, err *FsmError) {
+	fstr, err := bld.Structure()
+	if err != nil {
+		return
+	}
+	fsm = NewFsm(fstr)
+	return
+}
+
 // FromJsonFile
 // Constructs state machine structure from json file (see json format below)
 func (bld *Builder) FromJsonFile(path string) *Builder {

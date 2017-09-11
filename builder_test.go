@@ -161,13 +161,12 @@ func TestBuilderFromJsonFile(t *testing.T) {
 			return nil
 		},
 	}
-	fstr, berr := NewBuilder(actions).FromJsonFile("./fsm-sample.json").Structure()
+	fsm, berr := NewBuilder(actions).FromJsonFile("./fsm-sample.json").Fsm()
 	if berr != nil {
 		t.Logf("Structure construction failed, %s", berr.Error())
 		t.FailNow()
 	}
 
-	fsm := NewFsm(fstr)
 	res, rerr := fsm.Run()
 	if rerr != nil {
 		t.Logf("Loaded FSM execution failed: %s", rerr.Error())
