@@ -53,16 +53,21 @@ func (jg *JsonGuard) GuardFn() (guard GuardFn, err *FsmError) {
 	return
 }
 
+type JsonAction struct {
+	Name   string                 `json:"name"`
+	Params map[string]interface{} `json:"params"`
+}
+
 type JsonTransition struct {
-	ToState string    `json:"to"`
-	Guard   JsonGuard `json:"guard"`
-	Action  string    `json:"action"`
+	ToState string     `json:"to"`
+	Guard   JsonGuard  `json:"guard"`
+	Action  JsonAction `json:"action"`
 }
 
 func (jt *JsonTransition) Transition(name string, actions ActionMap) (tr Transition, err *FsmError) {
 	var action ActionFn
-	if len(jt.Action) > 0 {
-		if act, present := actions[jt.Action]; !present {
+	if len(jt.Action.Name) > 0 {
+		if act, present := actions[jt.Action.Name]; !present {
 			cause := fmt.Sprintf("action \"%s\" was not found in the map: %v", jt.Action, actions)
 			err = newFsmErrorInvalid(cause)
 			return

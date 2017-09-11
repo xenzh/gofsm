@@ -12,7 +12,12 @@
           "guard": {
             "type": "always"
           },
-          "action": "setnext"
+          "action": {
+            "name": "setnext",
+            "params": {
+              "setthis": 14
+            }
+          }
         }
       }
     },
@@ -26,7 +31,9 @@
             "key": "next",
             "value": "13"
           },
-          "action": "setresult13"
+          "action": {
+            "name": "setresult13"
+          }
         },
         "12-14": {
           "to": "14",
@@ -46,7 +53,9 @@
       "transitions": {
         "14-15": {
           "to": "15",
-          "action": "setresult42"
+          "action": {
+            "name": "setresult42"
+          }
         }
       }
     },

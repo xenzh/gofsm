@@ -98,7 +98,12 @@ func TestJsonTransitionUnmarshal(t *testing.T) {
 	rawJson := `
     {
         "to": "2",
-        "action": "hello",
+        "action": {
+        	"name": "hello",
+        	"params": {
+        		"what": "world"
+        	}
+        },
         "guard": {
             "type": "always"
         }
@@ -108,14 +113,18 @@ func TestJsonTransitionUnmarshal(t *testing.T) {
 		t.Logf("Unmarshalling failed: %s", err.Error())
 		t.FailNow()
 	}
-	if jt.ToState != "2" || jt.Action != "hello" || jt.Guard.Type != "always" {
+
+	wh, found := jt.Action.Params["what"]
+	if jt.ToState != "2" || jt.Guard.Type != "always" ||
+		jt.Action.Name != "hello" || len(jt.Action.Params) != 1 || !found || wh != "world" {
 		t.Logf("Unmarshalled different from expected:\nexpected: %s\nactual:%v", rawJson, jt)
 		t.FailNow()
 	}
+
 }
 
 func TestJsonTransitionFn(t *testing.T) {
-	jt := JsonTransition{"2", JsonGuard{"always", "", nil}, "hello"}
+	jt := JsonTransition{"2", JsonGuard{"always", "", nil}, JsonAction{"hello", nil}}
 	act := make(ActionMap)
 	if _, err := jt.Transition("1-2", act); err == nil || err.Kind() != ErrFsmIsInvalid {
 		t.Log("Expected to fail (no action found)")
@@ -157,7 +166,9 @@ func TestJsonStateUnmarshalValid2(t *testing.T) {
 				"guard": {
 					"type": "always"
 				},
-				"action": "setnext"
+				"action": {
+					"name": "setnext"
+				}
 			}
 		}
 	}`
