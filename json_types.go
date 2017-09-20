@@ -80,7 +80,7 @@ func (ja *JsonAction) PackagedAction(actions ActionMap) (pa *PackagedAction, err
 }
 
 type JsonTransition struct {
-	ToState string     `bson:"to",json:"to"`
+	ToState string     `bson:"to" json:"to"`
 	Guard   JsonGuard  `json:"guard"`
 	Action  JsonAction `json:"action"`
 }
