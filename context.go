@@ -21,6 +21,7 @@ type ContextAccessor interface {
 // Interface describing context modifiers
 type ContextModifier interface {
 	Put(string, interface{}) *FsmError
+	PutParent(string, interface{}) *FsmError
 	PutResult(interface{}) *FsmError
 }
 

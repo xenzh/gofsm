@@ -24,14 +24,20 @@ func newStateContext(state *StateInfo) StateContext {
 
 // ContextModifier.Put
 // Adds new / modifies existing member of underlying context
-func (sc *StateContext) Put(key string, value interface{}) {
-	sc.context.Put(key, value)
+func (sc *StateContext) Put(key string, value interface{}) *FsmError {
+	return sc.context.Put(key, value)
+}
+
+// ContextModifier.PutParent
+// Adds new / modifies existing member of parent context
+func (sc *StateContext) PutParent(key string, value interface{}) *FsmError {
+	return newFsmErrorRuntime("Single context has no parent", sc)
 }
 
 // ContextModifier.PutResult
-// Adds new / modifies result member of underlying context
-func (sc *StateContext) PutResult(result interface{}) {
-	sc.context.PutResult(result)
+// Sets / modifies result in a global context
+func (sc *StateContext) PutResult(result interface{}) *FsmError {
+	return sc.context.PutResult(result)
 }
 
 //
@@ -226,6 +232,16 @@ func (st *ContextStack) Put(key string, value interface{}) (err *FsmError) {
 	}
 	st.Peek().Put(key, value)
 	return
+}
+
+// ContextModifier.PutParent
+// Adds new / modifies existing member of parent context
+func (st *ContextStack) PutParent(key string, value interface{}) *FsmError {
+	parent := st.Parent()
+	if parent == nil {
+		return newFsmErrorRuntime("No parent for global context", st)
+	}
+	return parent.Put(key, value)
 }
 
 // ContextModifier.PutResult
