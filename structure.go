@@ -122,6 +122,9 @@ func (fstr *Structure) appendStates(start *StateInfo, additional map[string]*Sta
 		if _, found := fstr.states[k]; found {
 			return newFsmErrorStateIsInvalid(v, "Can't add a duplicate state")
 		}
+		if v.Parent == nil {
+			fstr.start.addSubState(v, false)
+		}
 		fstr.states[k] = v
 	}
 	return nil

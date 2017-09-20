@@ -111,7 +111,31 @@ func TestStructureAppendStatesFlat(t *testing.T) {
 	}
 }
 
-func TestStructureAppendStatesNested(t *testing.T) {
+func TestStructureAppendStatesNestedPositive(t *testing.T) {
+	outer := NewState("1", nil)
+	interm := NewState("2", nil)
+	inner := NewState("31", NewTransitionAlways("31->32", "32", nil))
+	inner2 := NewState("32", nil)
+
+	outer.addSubState(interm, true)
+	interm.addSubState(inner, true)
+	interm.addSubState(inner2, false)
+
+	ext := map[string]*StateInfo{"2": interm, "31": inner, "32": inner2}
+
+	fstr := NewStructure()
+	if err := fstr.appendStates(outer, ext); err != nil {
+		t.Logf("Appending states failed: %s", err.Error())
+		t.FailNow()
+	}
+	if err := fstr.Validate(); err != nil {
+		t.Logf("Validation failed: %s", err.Error())
+		t.FailNow()
+	}
+
+}
+
+func TestStructureAppendStatesNestedIsolated(t *testing.T) {
 	outer := NewState("1", nil)
 	interm := NewState("2", nil)
 	inner := NewState("31", NewTransitionAlways("31->32", "32", nil))
@@ -130,17 +154,6 @@ func TestStructureAppendStatesNested(t *testing.T) {
 	}
 	if err := fstr.Validate(); err == nil || err.Kind() != ErrFsmIsInvalid {
 		t.Logf("Validation should fail (\"1\" state isolated): %v", err)
-		t.FailNow()
-	}
-
-	fstr = NewStructure()
-	delete(ext, "1")
-	if err := fstr.appendStates(outer, ext); err != nil {
-		t.Logf("Appending states failed: %s", err.Error())
-		t.FailNow()
-	}
-	if err := fstr.Validate(); err != nil {
-		t.Logf("Validation failed: %s", err.Error())
 		t.FailNow()
 	}
 }
